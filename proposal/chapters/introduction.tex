@@ -1,0 +1,6 @@
+\section{Introduction}
+Systems that exhibit probabilistic behaviour exist everywhere: computer networks, security protocols and traffic, among others. Using probabilistic model checking, a technique used to verify the correctness of a model of a stochastic system, properties of models of these systems can be verified which can help avoid states that result in unintended behaviour, such as a system crash or a livelock. As these systems get more complex, it is important to use tools that can verify these models efficiently.
+
+Sokoban is a puzzle game where a player moves boxes around. Solving Sokoban levels has been proven to be an NP-hard problem\cite{sokoban-np}. Introducing stochastic behaviour into this game results in good benchmarks for these different probabilistic model checking tools. This will be done by disregarding the player's input, and by moving boxes in random directions, both according to pre-defined probabilities.
+
+This research aims to generate probabilistic models from Sokoban levels and a set of probabilities in various formats, so that these models can be used to benchmark existing probabilistic model checking tools in competitions such as QComp\footnote{\url{https://qcomp.org/}}.

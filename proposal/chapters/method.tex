@@ -1,0 +1,68 @@
+\section{Method}
+The research consists of two parts: (a) generating probabilistic models from existing Sokoban levels and a set of probabilities, and (b) experimenting with the generated models. 
+
+For part a., stochastic behaviour has to be introduced to the non-stochastic game Sokoban. This is done by defining the following probabilities:
+\begin{enumerate}
+    \item The probability that decides if the player's move is respected, or if a different move is selected. Additionally, probabilities for each movement direction are defined.
+    \item The probability that a box moves when not pushed by a player. Additionally, probabilities for each movement direction are defined.
+\end{enumerate}
+
+The probabilistic models are derived from .sok files, and the models are described by the PRISM language\cite{prism} and the JANI specification\cite{jani}, so that a wide range of probabilistic model checkers can be targetted. The goal is to create a tool that automates this process: using a .sok file and a set of probabilities as input, it should be able to output a probabilistic model in either the PRISM language, JANI, or both.
+
+Additionally, the position of the player and the boxes are represented in multiple ways. Depending on how these values are encoded, the performance of the model checkers may differ.
+
+The generated models abide by the following transition rules:
+\begin{enumerate}
+    \item The player can walk in any of the four directions (up, down, left, right) if:
+    \begin{enumerate}
+        \item there is not a box or wall at the destination. This action updates the player's position to the destination.
+        \item there is a box at the respective destination and the tile behind the destination is not a wall nor box. This action moves the box one tile backwards, and updates the player's position to the destination.
+    \end{enumerate}
+\end{enumerate}
+
+These transition rules do mean that it is possible to end up in unsolvable states: a player is able to position boxes in such a way that they can no longer push them, or they can lock themselves into an area of the level without being able to escape. However, with the stochastic additions it is possible that these situations resolve themselves eventually, whereas for the non-stochastic version of Sokoban one of those scenarios would most certainly require the player to reset from the start.
+
+
+Part b. involves experimenting with the generated models using existing probabilistic modelling tools. The tests will be conducted in virtual machines with identical specifications running an identical operating system. This creates a consistent playing field for the model checkers so that the run time performance can be measured fairly. Depending on the duration of the tests, they will be run multiple times to reduce inconsistencies caused due to measurement errors. A test is deemed completed once the target state is reached.
+
+
+% Part b. involves experimenting with the generated models using existing model checkers. Using these existing checkers, various stochastic properties can be verified about the models, such as:
+% \begin{itemize}
+%     \item The probability that a legal, unsolvable state is reached.
+%     \item The probability that the target state is reached.
+%     \item The probability that the target state is reached in less steps than the non-stochastic minimum solution.
+% \end{itemize} 
+
+% Additionally, during the generation phase, models can be generated in different ways. This may or may not improve performance for one or more checkers. By adding more constraints on what is and what is not considered a valid move, the state space can be reduced significantly. This can be done by disallowing moves that cause boxes to be stuck in corners or that moves that otherwise create an unsolvable state. These models will be referred to as the optimized models.
+
+% Furthermore, 
+
+% This yields the following research questions:
+% \begin{enumerate}
+%     \item What properties are interesting?
+%     \todo[inline]{Poorly formulated RQ}
+%     \item What is the effect of the optimization of the model on the run time and state space of the model checker?
+% \end{enumerate}
+% \todo[inline]{Something about model type?}
+% \todo[inline]{Something about player/box position encoding?}
+
+% \section{Method}
+% A Sokoban level, in the sok format as depicted in \autoref{fig:sok_ascii}, is used as an input for a program. The program also requires a set of probabilities to be defined for the stochastic behaviour described in \autoref{sec:problem_statement}. It will output two models: one described in the PRISM language and one according to the JANI specification.
+
+% For the regular models, the following transition rules are specified:
+% \begin{itemize}
+%     \item The player can walk in any of the four directions (up, down, left, right) if:
+%     \begin{itemize}
+%         \item there is not a box or wall at the destination. This action updates the player's position to the destination.
+%         \item there is a box at the respective destination and the tile behind the destination is not a wall nor box. This action moves the box one tile backwards, and updates the player's position to the destination.
+%     \end{itemize}
+% \end{itemize}
+
+% Additionally, for the optimized models the following rules are added:
+% \begin{itemize}
+%     \item A player may not push a box into a corner of the walls, unless this is required to reach the target state.
+%     \item A player may not box themselves in by placing boxes in a way that they can no longer reach the target state.
+% \end{itemize}
+% Both these rules exist as there is no way to recover from these states. It is impossible to retrieve a box when it is placed in a corner, as a box can only be pushed from behind and the player is unable to phase through walls. When the level has multiple levels, in some cases it is possible that the player boxes themselves in by placing the boxes in such a way that their exit is cut off and they can no longer move the blocking boxes out of the way. By adding these two rules, it is possible that the state space will be reduced as there will be less solutions that end in an unsolvable state.
+
+% The JANI model is run in mcsta, part of the Modest Toolset\footnote{\url{https://www.modestchecker.net/}}. The PRISM model is ran in PRISM. The tests will be conducted in virtual machines running Ubuntu 64-bit 20.04.4 LTS. Both machines have access to 1 CPU core, 20GB of storage space and 8 GB of RAM. This creates a consistent playing field for the model checkers so that run time performance can be measured fairly. Tests will be run 5 times and the run time will be averaged to smooth out any inconsistencies due to measurement errors. A test will be completed when the target state is reached, with a maximum time of 5 minutes before the test is deemed a failure.

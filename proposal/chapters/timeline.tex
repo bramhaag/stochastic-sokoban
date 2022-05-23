@@ -1,0 +1,63 @@
+\section{Planning}
+
+The planning is described in \autoref{tab:project_deadlines} and \autoref{fig:project_goals}, the table describing the deadlines imposed by the module, and the figure describing the planning required to reach those deadlines.
+
+\begin{table}[h]
+\begin{tabular}{l|l}
+\hline
+Date      & Assignment/Task                   \\ \hline
+8th May   & Final proposal submission         \\ \hline
+10th May  & Proposal peer feedback submission \\ \hline
+26th June & Draft paper submission            \\ \hline
+3rd July  & Final paper submission            \\ \hline
+8th July  & Conference presentation           \\ \hline
+\end{tabular}
+\caption{Research project deadlines for handing in assignments and doing tasks.}
+\label{tab:project_deadlines}
+\end{table}
+
+\begin{figure}[h]
+    \centering
+    \begin{ganttchart}[y unit title=0.4cm,
+y unit chart=0.5cm,
+vgrid,hgrid, 
+title label anchor/.style={below=-1.6ex},
+title height=1,
+progress label text={},
+bar height=0.7,
+group right shift=0,
+group top shift=.6,
+group height=.3]{1}{11}
+%labels
+\gantttitle{Week}{11} \\
+\gantttitle{1}{1} 
+\gantttitle{2}{1} 
+\gantttitle{3}{1} 
+\gantttitle{4}{1} 
+\gantttitle{5}{1} 
+\gantttitle{6}{1}
+\gantttitle{7}{1} 
+\gantttitle{8}{1} 
+\gantttitle{9}{1} 
+\gantttitle{10}{1} 
+\gantttitle{11}{1} \\
+
+%tasks
+\ganttbar[bar/.append style={pattern=north east lines, pattern color=teal}]{Proposal}{1}{1}
+\ganttbar[bar/.append style={pattern=north east lines, pattern color=teal}]{}{2}{2} \\
+\ganttmilestone[milestone/.append style={fill=teal}]{Draft proposal}{1} \\
+\ganttmilestone[milestone/.append style={fill=teal}]{Final proposal submission}{2} \\
+\ganttbar[bar/.append style={pattern=north east lines, pattern color=orange}]{Implement project}{3}{5} \\
+\ganttbar[bar/.append style={pattern=north east lines, pattern color=red}]{Run tests}{5}{6} \\
+\ganttbar[bar/.append style={pattern=north east lines, pattern color=pink}]{Analyse measurements}{6}{7} \\
+\ganttbar[bar/.append style={pattern=north east lines, pattern color=cyan}]{Write paper}{3}{9}
+\ganttbar[bar/.append style={pattern=north east lines, pattern color=cyan}]{}{10}{10} \\
+\ganttmilestone[milestone/.append style={fill=cyan}]{Draft paper submission}{9} \\
+\ganttmilestone[milestone/.append style={fill=cyan}]{Final paper submission}{10} \\
+\ganttbar[bar/.append style={pattern=north east lines, pattern color=lime}]{Prepare presentation}{10}{11} \\
+\ganttmilestone[milestone/.append style={fill=lime}]{Conference}{11} \\
+
+\end{ganttchart}
+    \caption{Research project goals and milestones per week.}
+    \label{fig:project_goals}
+\end{figure}
