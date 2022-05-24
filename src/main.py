@@ -108,6 +108,7 @@ if args.output:
     if os.path.exists(args.output) and not args.force:
         exit_with_error("Output file already exists: " + args.output)
 
+    os.makedirs(os.path.dirname(args.output), exist_ok=True)
     with open(args.output, "w+") as file:
         file.write(model)
 else:
