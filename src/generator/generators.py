@@ -33,6 +33,8 @@ class PrismGenerator(Generator):
     def generate_model(self, level: Level, probabilities: dict[str, Decimal]) -> str:
         return textwrap.dedent(f"""
         mdp
+        
+        label "goal_reached" = {"&".join(f"box_{g}=true" for g in level.goals)};
 
         module Player
             position: [{level.first_pos}..{level.last_pos}] init {level.player};
