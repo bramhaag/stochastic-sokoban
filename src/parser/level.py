@@ -61,5 +61,9 @@ class Level(object):
 
         return path
 
+    @cached_property
+    def boxes(self) -> set[int]:
+        return {i for i, t in enumerate(self.board) if t == TileType.BOX}
+
     def is_wall(self, i: int):
         return self.board[i] == TileType.WALL
