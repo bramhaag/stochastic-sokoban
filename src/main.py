@@ -5,7 +5,7 @@ import sys
 from collections import defaultdict
 from decimal import Decimal
 
-from generator.generators import JaniGenerator, PrismGenerator, Prism2Generator
+from generator.generators import JaniGenerator, PrismGenerator, Prism2Generator, Jani2Generator
 from parser.parsers import SokParser
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
@@ -36,7 +36,7 @@ optional.add_argument("-p", "--parser",
                       help="parser type (default: %(default)s)")
 required.add_argument("-m", "--model",
                       type=str,
-                      choices=["jani", "prism", "prism2"],
+                      choices=["jani", "jani2", "prism", "prism2"],
                       required=True,
                       help="model type")
 optional.add_argument("-x", "--probabilities",
@@ -72,6 +72,8 @@ match args.parser:
 match args.model:
     case "jani":
         generator = JaniGenerator()
+    case "jani2":
+        generator = Jani2Generator()
     case "prism":
         generator = PrismGenerator()
     case "prism2":
