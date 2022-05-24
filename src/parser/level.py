@@ -17,7 +17,7 @@ class Level(object):
     rows: int
     columns: int
 
-    @cached_property
+    @property
     def size(self):
         return self.rows * self.columns
 

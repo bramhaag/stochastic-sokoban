@@ -71,10 +71,8 @@ class PrismGenerator(Generator):
         else:
             start, end = level.first_pos, min(level.size - offset, level.last_pos + 1)
 
-        return '\n'.join(self.MOVE_LINE.format(state, i, i + offset)
-                         for i in range(start, end)
-                         if not level.is_wall(i)
-                         and not level.is_wall(i + offset))
+        return '\n'.join(self.MOVE_LINE.format(state, i, j)
+                         for i, j in self._multi_range(start, end, [offset], level.reachable_tiles))
 
     def _generate_push(self, state: int, level: Level, offset: int):
         if offset < 0:
@@ -82,15 +80,17 @@ class PrismGenerator(Generator):
         else:
             start, end = level.first_pos, min(level.size - 2 * offset, level.last_pos + 1)
 
-        return '\n'.join(self.PUSH_LINE.format(state, i, i + offset, i + 2 * offset)
-                         for i in range(start, end)
-                         if not level.is_wall(i)
-                         and not level.is_wall(i + offset)
-                         and not level.is_wall(i + 2 * offset))
+        return '\n'.join(self.PUSH_LINE.format(state, i, j, k)
+                         for i, j, k in self._multi_range(start, end, [offset, 2 * offset], level.reachable_tiles))
 
     @staticmethod
     def _indent(s: str, n: int = 12):
         return s.replace('\n', '\n' + (' ' * n))
+
+    @staticmethod
+    def _multi_range(start: int, end: int, offset: list[int], valid: set[int]):
+        return [x for x in zip(range(start, end), *[range(start + o, end + o) for o in offset])
+                if set(x).issubset(valid)]
 
 
 class JaniGenerator(Generator):
@@ -147,7 +147,6 @@ class JaniGenerator(Generator):
                         *self._generate_push("left", level, -1),
                         *self._generate_move("right", level, 1),
                         *self._generate_push("right", level, 1)
-
                     ]
                 }
             ],
@@ -249,19 +248,20 @@ class JaniGenerator(Generator):
                 "guard": {
                     "exp": self._generate_and(
                         self._generate_eq("position", i),
-                        self._generate_eq(f"box_{i + offset}", False)
+                        self._generate_eq(f"box_{j}", False)
                     )
                 },
                 "destinations": [
                     {
                         "location": "move",
                         "assignments": [
-                            self._generate_assignment("position", i + offset)
+                            self._generate_assignment("position", j)
                         ]
                     }
                 ]
             }
-            for i in range(start, end) if not level.is_wall(i) and not level.is_wall(i + offset)]
+
+            for i, j in self._multi_range(start, end, [offset], level.reachable_tiles)]
 
     def _generate_push(self, loc: str, level: Level, offset: int):
         if offset < 0:
@@ -275,20 +275,24 @@ class JaniGenerator(Generator):
                 "guard": {
                     "exp": self._generate_and(self._generate_and(
                         self._generate_eq("position", i),
-                        self._generate_eq(f"box_{i + offset}", True)),
-                        self._generate_eq(f"box_{i + 2 * offset}", False)
+                        self._generate_eq(f"box_{j}", True)),
+                        self._generate_eq(f"box_{k}", False)
                     )
                 },
                 "destinations": [
                     {
                         "location": "move",
                         "assignments": [
-                            self._generate_assignment(f"box_{i + offset}", False),
-                            self._generate_assignment(f"box_{i + 2 * offset}", True),
-                            self._generate_assignment("position", i + offset)
+                            self._generate_assignment(f"box_{j}", False),
+                            self._generate_assignment(f"box_{k}", True),
+                            self._generate_assignment("position", j)
                         ]
                     }
                 ]
             }
-            for i in range(start, end)
-            if not level.is_wall(i) and not level.is_wall(i + offset) and not level.is_wall(i + 2 * offset)]
+            for i, j, k in self._multi_range(start, end, [offset, 2 * offset], level.reachable_tiles)]
+
+    @staticmethod
+    def _multi_range(start: int, end: int, offset: list[int], valid: set[int]):
+        return [x for x in zip(range(start, end), *[range(start + o, end + o) for o in offset])
+                if set(x).issubset(valid)]
