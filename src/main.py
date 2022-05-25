@@ -5,7 +5,7 @@ import sys
 from collections import defaultdict
 from decimal import Decimal
 
-from generator.generators import JaniGenerator, Jani2Generator
+from generator.jani_generators import JaniBoxGenerator, JaniPosGenerator
 from generator.prism_generators import PrismBoxGenerator, PrismPosGenerator
 from parser.parsers import SokParser
 
@@ -16,8 +16,8 @@ PARSERS = {
 }
 
 GENERATORS = {
-    "jani": JaniGenerator,
-    "jani2": Jani2Generator,
+    "jani-box": JaniBoxGenerator,
+    "jani-pos": JaniPosGenerator,
     "prism-box": PrismBoxGenerator,
     "prism-pos": PrismPosGenerator
 }
