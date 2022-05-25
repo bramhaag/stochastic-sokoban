@@ -10,6 +10,17 @@ from parser.parsers import SokParser
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
 
+PARSERS = {
+    "sok": SokParser
+}
+
+GENERATORS = {
+    "jani": JaniGenerator,
+    "jani2": Jani2Generator,
+    "prism": PrismGenerator,
+    "prism2": Prism2Generator
+}
+
 
 def exit_with_error(message: str):
     logging.error(message)
@@ -32,11 +43,11 @@ optional.add_argument("-f", "--force",
                       help="overwrite output file")
 optional.add_argument("-p", "--parser",
                       type=str,
-                      choices=["sok"], default="sok",
+                      choices=PARSERS.keys(), default="sok",
                       help="parser type (default: %(default)s)")
 required.add_argument("-m", "--model",
                       type=str,
-                      choices=["jani", "jani2", "prism", "prism2"],
+                      choices=GENERATORS.keys(),
                       required=True,
                       help="model type")
 optional.add_argument("-x", "--probabilities",
@@ -61,23 +72,11 @@ if args.input is not None:
     except FileNotFoundError:
         exit_with_error("File not found: " + args.input)
 else:
-    text = sys.stdin.read()
+    text = sys.stdin.read().rstrip()
 
-# Set parser
-match args.parser:
-    case "sok":
-        parser = SokParser()
-
-# Set generator
-match args.model:
-    case "jani":
-        generator = JaniGenerator()
-    case "jani2":
-        generator = Jani2Generator()
-    case "prism":
-        generator = PrismGenerator()
-    case "prism2":
-        generator = Prism2Generator()
+# Set parser and generator
+parser = PARSERS[args.parser]()
+generator = GENERATORS[args.model]()
 
 # Parse probabilities
 probabilities = {}
@@ -101,11 +100,9 @@ for p in args.probabilities:
 # Balance probabilities
 probabilities = defaultdict(lambda: 0, {k: v / sum(probabilities.values()) for k, v in probabilities.items()})
 
-# noinspection PyUnboundLocalVariable
 level = parser.parse_level(text)
 # TODO handle parser errors
 
-# noinspection PyUnboundLocalVariable
 model = generator.generate_model(level, probabilities)
 
 if args.output:
