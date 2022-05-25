@@ -1,7 +1,6 @@
 import functools
 import itertools
 import json
-import textwrap
 from abc import ABC, abstractmethod
 from decimal import Decimal
 from functools import reduce
@@ -16,183 +15,15 @@ class Generator(ABC):
         pass
 
 
-class PrismGenerator(Generator):
-    BOX_LINE = "box_{0}: bool init {1};"
-
-    MOVE_LINE = "[] state={0} & position={1} & box_{2}=false -> " \
-                "(position'={2}) & (state'=0);"
-
-    PUSH_LINE = "[] state={0} & position={1} & box_{2}=true & box_{3}=false -> " \
-                "(position'={2}) & (box_{2}'=false) & (box_{3}'=true) & (state'=0);"
-
-    STATES = {
-        1: "u",
-        3: "d",
-        5: "l",
-        7: "r"
-    }
-
-    def generate_model(self, level: Level, probabilities: dict[str, Decimal]) -> str:
-        return textwrap.dedent(f"""
-        mdp
-        
-        label "goal_reached" = {"&".join(f"box_{g}=true" for g in level.goals)};
-
-        module Player
-            position: [{level.first_pos}..{level.last_pos}] init {level.player};
-            state: [0..8] init 0;
-            
-            {self._indent(self._generate_board(level))}
-
-            {self._generate_prob_edges(probabilities)}
-            
-            {self._indent(self._generate_move(1, level, -level.columns))}
-            {self._indent(self._generate_push(2, level, -level.columns))}
-            
-            {self._indent(self._generate_move(3, level, level.columns))}
-            {self._indent(self._generate_push(4, level, level.columns))}
-            
-            {self._indent(self._generate_move(5, level, -1))}
-            {self._indent(self._generate_push(6, level, -1))} 
-            
-            {self._indent(self._generate_move(7, level, 1))}
-            {self._indent(self._generate_push(8, level, 1))}
-        endmodule
-        """).strip()
-
-    def _generate_board(self, level: Level):
-        return '\n'.join(self.BOX_LINE.format(i, str(level.board[i] == TileType.BOX).lower())
-                         for i in level.reachable_tiles)
-
-    def _generate_prob_edges(self, probabilities: dict[str, Decimal]):
-        edges = [f"{probabilities[v] / 2}:(state'={k}) + {probabilities[v] / 2}:(state'={k + 1})"
-                 for k, v in self.STATES.items()]
-        return f"[] state=0 -> {' + '.join(edges)};"
-
-    def _generate_move(self, state: int, level: Level, offset: int):
-        if offset < 0:
-            start, end = max(-offset, level.first_pos), level.last_pos + 1
-        else:
-            start, end = level.first_pos, min(level.size - offset, level.last_pos + 1)
-
-        return '\n'.join(self.MOVE_LINE.format(state, i, j)
-                         for i, j in self._multi_range(start, end, [offset], level.reachable_tiles))
-
-    def _generate_push(self, state: int, level: Level, offset: int):
-        if offset < 0:
-            start, end = max(-2 * offset, level.first_pos), level.last_pos + 1
-        else:
-            start, end = level.first_pos, min(level.size - 2 * offset, level.last_pos + 1)
-
-        return '\n'.join(self.PUSH_LINE.format(state, i, j, k)
-                         for i, j, k in self._multi_range(start, end, [offset, 2 * offset], level.reachable_tiles))
-
-    @staticmethod
-    def _indent(s: str, n: int = 12):
-        return s.replace('\n', '\n' + (' ' * n))
-
-    @staticmethod
-    def _multi_range(start: int, end: int, offset: list[int], valid: set[int]):
-        return [x for x in zip(range(start, end), *[range(start + o, end + o) for o in offset])
-                if set(x).issubset(valid)]
+def _multi_range(start: int, end: int, offset: list[int], valid: set[int]):
+    return [x for x in zip(range(start, end), *[range(start + o, end + o) for o in offset]) if set(x).issubset(valid)]
 
 
-class Prism2Generator(Generator):
-    BOX_LINE = "box_{0}: [{1}..{2}] init {3};"
-
-    MOVE_LINE = "[] state={0} & position={1} & {2} -> " \
-                "(position'={2}) & (state'=0);"
-
-    PUSH_LINE = "[] state={0} & position={1} & box_{2}=true & box_{3}=false -> " \
-                "(position'={2}) & (box_{2}'=false) & (box_{3}'=true) & (state'=0);"
-
-    STATES = {
-        1: "u",
-        3: "d",
-        5: "l",
-        7: "r"
-    }
-
-    def generate_model(self, level: Level, probabilities: dict[str, Decimal]) -> str:
-        return textwrap.dedent(f"""
-        mdp
-
-        {self._generate_goal_label(level)}
-
-        module Player
-            position: [{level.first_pos}..{level.last_pos}] init {level.player};
-            state: [0..8] init 0;
-            
-            {self._indent(self._generate_board(level))}
-
-            {self._generate_prob_edges(probabilities)}
-
-            {self._indent(self._generate_move(1, level, -level.columns))}
-            {self._indent(self._generate_push(2, level, -level.columns))}
-
-            {self._indent(self._generate_move(3, level, level.columns))}
-            {self._indent(self._generate_push(4, level, level.columns))}
-
-            {self._indent(self._generate_move(5, level, -1))}
-            {self._indent(self._generate_push(6, level, -1))} 
-
-            {self._indent(self._generate_move(7, level, 1))}
-            {self._indent(self._generate_push(8, level, 1))}
-        endmodule
-        """).strip()
-
-    def _generate_goal_label(self, level: Level):
-        goal_states = []
-        for permutation in itertools.permutations(level.goals):
-            goal_states.append(
-                "(" + "&".join(f"box_{b}={v}" for b, v in zip(range(len(level.goals)), permutation)) + ")")
-
-        return f'label "goal_reached" = {"|".join(goal_states)};'
-
-    def _generate_board(self, level: Level):
-        return '\n'.join(self.BOX_LINE.format(i, level.first_pos, level.last_pos, p) for i, p in enumerate(level.boxes))
-
-    def _generate_prob_edges(self, probabilities: dict[str, Decimal]):
-        edges = [f"{probabilities[v] / 2}:(state'={k}) + {probabilities[v] / 2}:(state'={k + 1})"
-                 for k, v in self.STATES.items()]
-        return f"[] state=0 -> {' + '.join(edges)};"
-
-    def _generate_move(self, state: int, level: Level, offset: int):
-        if offset < 0:
-            start, end = max(-offset, level.first_pos), level.last_pos + 1
-        else:
-            start, end = level.first_pos, min(level.size - offset, level.last_pos + 1)
-
-        box_guard = ' & '.join([f"box_{i} != {{0}}" for i in range(len(level.boxes))])
-        return '\n'.join(f"[] state={state} & position={i} & {box_guard.format(j)} -> (position'={j}) & (state'=0);"
-                         for i, j in self._multi_range(start, end, [offset], level.reachable_tiles))
-
-    def _generate_push(self, state: int, level: Level, offset: int):
-        if offset < 0:
-            start, end = max(-2 * offset, level.first_pos), level.last_pos + 1
-        else:
-            start, end = level.first_pos, min(level.size - 2 * offset, level.last_pos + 1)
-
-        statements = []
-        for b in range(len(level.boxes)):
-            box_guard = ' & '.join([f"box_{i} != {{0}} & box_{i} != {{1}}" for i in range(len(level.boxes)) if b != i])
-            box_guard += f" & box_{b}={{0}}"
-
-            statements.extend(
-                f"[] state={state} & position={i} & {box_guard.format(j, k)} "
-                f"-> (position'={j}) & (box_{b}'={k}) & (state'=0);"
-                for i, j, k in self._multi_range(start, end, [offset, 2 * offset], level.reachable_tiles))
-
-        return '\n'.join(statements)
-
-    @staticmethod
-    def _indent(s: str, n: int = 12):
-        return s.replace('\n', '\n' + (' ' * n))
-
-    @staticmethod
-    def _multi_range(start: int, end: int, offset: list[int], valid: set[int]):
-        return [x for x in zip(range(start, end), *[range(start + o, end + o) for o in offset])
-                if set(x).issubset(valid)]
+def _move_bounds(level: Level, offset: int):
+    if offset < 0:
+        return max(-offset, level.first_pos), level.last_pos + 1
+    else:
+        return level.first_pos, min(level.size - offset, level.last_pos + 1)
 
 
 class Jani2Generator(Generator):

@@ -5,7 +5,8 @@ import sys
 from collections import defaultdict
 from decimal import Decimal
 
-from generator.generators import JaniGenerator, PrismGenerator, Prism2Generator, Jani2Generator
+from generator.generators import JaniGenerator, Jani2Generator
+from generator.prism_generators import PrismBoxGenerator, PrismPosGenerator
 from parser.parsers import SokParser
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
@@ -17,8 +18,8 @@ PARSERS = {
 GENERATORS = {
     "jani": JaniGenerator,
     "jani2": Jani2Generator,
-    "prism": PrismGenerator,
-    "prism2": Prism2Generator
+    "prism-box": PrismBoxGenerator,
+    "prism-pos": PrismPosGenerator
 }
 
 
