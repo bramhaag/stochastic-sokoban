@@ -7,12 +7,12 @@ from decimal import Decimal
 
 from generator.jani_generators import JaniBoxGenerator, JaniPosGenerator
 from generator.prism_generators import PrismBoxGenerator, PrismPosGenerator
-from parser.parsers import SokParser
+from parser.parsers import SimpleSokParser
 
 logging.basicConfig(format="%(levelname)s: %(message)s")
 
 PARSERS = {
-    "sok": SokParser
+    "sok": SimpleSokParser
 }
 
 GENERATORS = {
@@ -101,10 +101,14 @@ for p in args.probabilities:
 # Balance probabilities
 probabilities = defaultdict(lambda: 0, {k: v / sum(probabilities.values()) for k, v in probabilities.items()})
 
-level = parser.parse_level(text)
-# TODO handle parser errors
+levels = parser.parse_levels(text)
+if len(levels) == 0:
+    exit_with_error("No parseable levels found in input")
 
-model = generator.generate_model(level, probabilities)
+if len(levels) > 1:
+    logging.warning(f"Found {len(levels)} levels, only the first will be converted to a model.")
+
+model = generator.generate_model(levels[0], probabilities)
 
 if args.output:
     if os.path.exists(args.output) and not args.force:
