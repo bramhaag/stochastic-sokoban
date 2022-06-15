@@ -5,7 +5,7 @@ import os.path
 import sys
 from collections import defaultdict
 
-from generator.jani_generators import JaniBoxGenerator, JaniPosGenerator
+from generator.jani_generators import JaniNonStochasticGenerator, JaniGenerator
 from generator.prism_generators import PrismGenerator, PrismNonStochasticGenerator
 from parser.parsers import SokParser
 
@@ -14,8 +14,8 @@ PARSERS = {
 }
 
 GENERATORS = {
-    "jani-box": JaniBoxGenerator,
-    "jani-pos": JaniPosGenerator,
+    "jani": JaniGenerator,
+    "jani-ns": JaniNonStochasticGenerator,
     "prism": PrismGenerator,
     "prism-ns": PrismNonStochasticGenerator
 }
