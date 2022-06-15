@@ -1,6 +1,5 @@
 import itertools
 from abc import ABC, abstractmethod
-from decimal import Decimal
 
 from parser.level import Level
 
@@ -8,7 +7,7 @@ from parser.level import Level
 class Generator(ABC):
 
     @abstractmethod
-    def generate_model(self, level: Level, probabilities: dict[str, Decimal]) -> str:
+    def generate_model(self, level: Level) -> str:
         pass
 
 

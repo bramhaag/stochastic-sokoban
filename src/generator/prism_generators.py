@@ -1,21 +1,8 @@
-import decimal
 import textwrap
 
 from generator.generator import Generator
 from generator.string_generators import SokGenerator
 from parser.level import Level, TileType
-
-STATES = {
-    1: "u",
-    2: "U",
-    3: "d",
-    4: "D",
-    5: "l",
-    6: "L",
-    7: "r",
-    8: "R",
-    9: "b",
-}
 
 STRING_GENERATOR = SokGenerator()
 
@@ -29,7 +16,14 @@ def _level_to_string(level) -> str:
 
 
 class PrismNonStochasticGenerator(Generator):
-    def generate_model(self, level: Level, probabilities: dict[str, decimal.Decimal]) -> str:
+    def generate_model(self, level: Level) -> str:
+        offsets = {
+            "up": -level.columns,
+            "down": level.columns,
+            "left": -1,
+            "right": 1
+        }
+
         return textwrap.dedent(f"""
         {_indent(_level_to_string(level), 8)}
         mdp
@@ -41,7 +35,8 @@ class PrismNonStochasticGenerator(Generator):
 
             {_indent(self._generate_board(level))}
 
-            {_indent((chr(10) * 2).join(self._generate_actions(i, level) for i in sorted(level.reachable_tiles)))}
+            {_indent((chr(10) * 2).join(self._generate_actions(i, level, offsets)
+                                        for i in sorted(level.reachable_tiles)))}
         endmodule
         
         rewards
@@ -49,27 +44,20 @@ class PrismNonStochasticGenerator(Generator):
         endrewards""").strip()
 
     @staticmethod
-    def _generate_board(level: Level):
-        def to_variable(name: str, value: bool):
+    def _generate_board(level: Level) -> str:
+        def to_variable(name: str, value: bool) -> str:
             return f"{name}: bool init {str(value).lower()};"
 
         return '\n'.join(to_variable(f"box_{i}", level.board[i] == TileType.BOX) for i in sorted(level.reachable_tiles))
 
     @staticmethod
-    def _generate_actions(position: int, level: Level):
+    def _generate_actions(position: int, level: Level, offsets: dict[str, int]) -> str:
         def to_move(direction: str, first_pos: int, second_pos: int) -> str:
             return f"[{direction}] position={first_pos} & !box_{second_pos} -> (position'={second_pos});"
 
         def to_move_and_push(direction: str, x: int, y: int, z: int) -> str:
             return f"[{direction}] position={x} & !(box_{y} & box_{z}) " \
                    f"->  (position'={y}) & (box_{y}'=false) & (box_{z}'=box_{y} | box_{z});"
-
-        offsets = {
-            "up": -level.columns,
-            "down": level.columns,
-            "left": -1,
-            "right": 1
-        }
 
         commands = []
         for d, o in offsets.items():
@@ -82,7 +70,14 @@ class PrismNonStochasticGenerator(Generator):
 
 
 class PrismGenerator(Generator):
-    def generate_model(self, level: Level, probabilities: dict[str, decimal.Decimal]) -> str:
+    def generate_model(self, level: Level) -> str:
+        offsets = {
+            "up": -level.columns,
+            "down": level.columns,
+            "left": -1,
+            "right": 1
+        }
+
         return textwrap.dedent(f"""
         {_indent(_level_to_string(level), 8)}
         mdp
@@ -96,7 +91,8 @@ class PrismGenerator(Generator):
 
             {_indent(self._generate_board(level))}
 
-            {_indent((chr(10) * 2).join(self._generate_actions(i, level) for i in sorted(level.reachable_tiles)))}
+            {_indent((chr(10) * 2).join(self._generate_actions(i, level, offsets)
+                                        for i in sorted(level.reachable_tiles)))}
         endmodule
 
         rewards
@@ -104,16 +100,14 @@ class PrismGenerator(Generator):
         endrewards""").strip()
 
     @staticmethod
-    def _generate_board(level: Level):
+    def _generate_board(level: Level) -> str:
         def to_variable(name: str, value: bool):
             return f"{name}: bool init {str(value).lower()};"
 
         return '\n'.join(to_variable(f"box_{i}", level.board[i] == TileType.BOX) for i in sorted(level.reachable_tiles))
 
     @staticmethod
-    def _generate_actions(position: int, level: Level):
-        # cond -> mu:M + (1-mu)/N:down + (1-mu)/N:up
-
+    def _generate_actions(position: int, level: Level, offsets: dict[str, int]) -> str:
         def to_push_expression(y: int, z: int) -> str:
             return f"(position'=box_{y} & !box_{z} ? {y} : position) " \
                    f"& (box_{y}'=box_{y} & box_{z}) " \
@@ -143,13 +137,6 @@ class PrismGenerator(Generator):
         def to_push_command(direction: str, x: int, y: int, z: int) -> tuple[str, str]:
             return f"[{direction}] position={x} & !(box_{y} & box_{z})", \
                    f"(position'={y}) & (box_{y}'=false) & (box_{z}'=box_{y} | box_{z})"
-
-        offsets = {
-            "up": -level.columns,
-            "down": level.columns,
-            "left": -1,
-            "right": 1
-        }
 
         commands = []
         for d, o in offsets.items():

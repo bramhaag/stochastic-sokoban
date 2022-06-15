@@ -1,56 +1,45 @@
 import json
-from decimal import Decimal
 from numbers import Number
 
 from generator.generator import Generator, _flatten
 from parser.level import Level, TileType
 
-Expr = str | dict | Number
+Identifier = str
+Expr = Identifier | dict | Number | bool
 
 
-def _and(head, *tail) -> dict:
-    if len(tail) == 0:
-        return head
-
+def _binary_op(op: str, left: Expr, right: Expr):
     return {
-        "op": "∧",
-        "left": head,
-        "right": _and(*tail) if len(tail) > 1 else tail[0]
+        "op": op,
+        "left": left,
+        "right": right
     }
 
 
-def _or(head, *tail) -> dict:
-    return {
-        "op": "∨",
-        "left": head,
-        "right": _or(*tail) if len(tail) > 1 else tail[0]
-    }
+def _and(head: Expr, *tail: [Expr]) -> Expr:
+    return head if len(tail) == 0 else _binary_op("∧", head, _and(*tail))
 
 
-def _eq(name: str, value):
-    return {
-        "op": "=",
-        "left": name,
-        "right": value
-    }
+def _or(head, *tail) -> Expr:
+    return head if len(tail) == 0 else _binary_op("∨", head, _and(*tail))
 
 
-def _neq(name: str, value):
-    return {
-        "op": "≠",
-        "left": name,
-        "right": value
-    }
+def _eq(left: Expr, right: Expr) -> Expr:
+    return _binary_op("=", left, right)
 
 
-def _neg(exp: Expr):
+def _neq(left: Expr, right: Expr) -> Expr:
+    return _binary_op("≠", left, right)
+
+
+def _neg(exp: Expr) -> Expr:
     return {
         "op": "¬",
         "exp": exp,
     }
 
 
-def _if(cond: Expr, then: Expr, otherwise: Expr):
+def _if(cond: Expr, then: Expr, otherwise: Expr) -> Expr:
     return {
         "op": "ite",
         "if": cond,
@@ -59,46 +48,33 @@ def _if(cond: Expr, then: Expr, otherwise: Expr):
     }
 
 
-def _sub(left: Expr, right: Expr) -> dict:
-    return {
-        "op": "-",
-        "left": left,
-        "right": right
-    }
+def _sub(left: Expr, right: Expr) -> Expr:
+    return _binary_op("-", left, right)
 
 
-def _div(left: Expr, right: Expr) -> dict:
-    return {
-        "op": "/",
-        "left": left,
-        "right": right
-    }
+def _div(left: Expr, right: Expr) -> Expr:
+    return _binary_op("/", left, right)
 
 
-def _assignment(name: str, value):
+def _assignment(name: Identifier, value: Expr) -> Expr:
     return {
         "ref": name,
         "value": value
     }
 
 
-def _edge(action: str, guard, assignments):
+def _edge(action: Identifier, guard: Expr, destinations: [Expr] = None) -> Expr:
     return {
         "location": "move",
         "action": action,
         "guard": {
             "exp": guard
         },
-        "destinations": [
-            {
-                "location": "move",
-                "assignments": assignments
-            }
-        ]
+        "destinations": destinations
     }
 
 
-def _pmax_property(name: str, exp):
+def _pmax_property(name: Identifier, exp: Expr) -> Expr:
     return {
         "name": name,
         "expression": {
@@ -118,21 +94,21 @@ def _pmax_property(name: str, exp):
     }
 
 
-def _destination(loc: str, probability, assignments: list[dict]):
+def _destination(location: Identifier, probability: Expr = 1.0, assignments: [Expr] = None) -> Expr:
     return {
-        "location": loc,
+        "location": location,
         "probability": {
             "exp": probability
         },
-        "assignments": assignments
+        "assignments": assignments or []
     }
 
 
-def _location(loc: str):
-    return {"name": loc}
+def _location(name: Identifier) -> Expr:
+    return {"name": name}
 
 
-def _model(variables=None, constants=None, properties=None, edges=None):
+def _model(variables: [Expr] = None, constants: [Expr] = None, properties: [Expr] = None, edges: [Expr] = None):
     return {
         "jani-version": 1,
         "name": "sokoban",
@@ -162,7 +138,14 @@ def _model(variables=None, constants=None, properties=None, edges=None):
 
 
 class JaniNonStochasticGenerator(Generator):
-    def generate_model(self, level: Level, probabilities: dict[str, Decimal]) -> str:
+    def generate_model(self, level: Level) -> str:
+        offsets = {
+            "up": -level.columns,
+            "down": level.columns,
+            "left": -1,
+            "right": 1
+        }
+
         output = _model(
             variables=[
                 {
@@ -178,13 +161,13 @@ class JaniNonStochasticGenerator(Generator):
                 *self._generate_board(level)
             ],
             properties=[self._generate_property(level)],
-            edges=_flatten([self._generate_edges(i, level) for i in sorted(level.reachable_tiles)])
+            edges=_flatten([self._generate_edges(i, level, offsets) for i in sorted(level.reachable_tiles)])
         )
 
         return json.dumps(output, indent=4)
 
     @staticmethod
-    def _generate_board(level) -> list[dict]:
+    def _generate_board(level: Level) -> [Expr]:
         return [{
             "name": f"box_{i}",
             "type": "bool",
@@ -192,36 +175,29 @@ class JaniNonStochasticGenerator(Generator):
         } for i in sorted(level.reachable_tiles)]
 
     @staticmethod
-    def _generate_property(level) -> dict:
-        return _pmax_property("Goal state reached", _and(*[_eq(f"box_{goal}", True) for goal in level.goals]))
+    def _generate_property(level: Level) -> Expr:
+        return _pmax_property("goal_reached", _and(*[_eq(f"box_{goal}", True) for goal in level.goals]))
 
     @staticmethod
-    def _generate_edges(position: int, level: Level) -> list[dict]:
-        def to_move(direction: str, x: int, y: int) -> dict:
+    def _generate_edges(position: int, level: Level, offsets: dict[str, int]) -> [Expr]:
+        def to_move(direction: str, x: int, y: int) -> Expr:
             return _edge(action=direction,
                          guard=_and(_eq("position", x), _neg(f"box_{y}")),
-                         assignments=[_assignment("position", y)])
+                         destinations=[_destination(location="move", assignments=[_assignment("position", y)])])
 
-        def to_move_or_push(direction: str, x: int, y: int, z: int) -> dict:
+        def to_move_and_push(direction: str, x: int, y: int, z: int) -> Expr:
             return _edge(action=direction,
                          guard=_and(_eq("position", x), _neg(_and(f"box_{y}", f"box_{z}"))),
-                         assignments=[
+                         destinations=[_destination("move", assignments=[
                              _assignment("position", y),
                              _assignment(f"box_{y}", False),
                              _assignment(f"box_{z}", _or(f"box_{y}", f"box_{z}"))
-                         ])
-
-        offsets = {
-            "up": -level.columns,
-            "down": level.columns,
-            "left": -1,
-            "right": 1
-        }
+                         ])])
 
         edges = []
         for d, o in offsets.items():
             if position + o in level.reachable_tiles and position + 2 * o in level.reachable_tiles:
-                edges.append(to_move_or_push(d, position, position + o, position + 2 * o))
+                edges.append(to_move_and_push(d, position, position + o, position + 2 * o))
             elif position + o in level.reachable_tiles:
                 edges.append(to_move(d, position, position + o))
 
@@ -229,7 +205,14 @@ class JaniNonStochasticGenerator(Generator):
 
 
 class JaniGenerator(Generator):
-    def generate_model(self, level: Level, probabilities: dict[str, Decimal]) -> str:
+    def generate_model(self, level: Level) -> str:
+        offsets = {
+            "up": -level.columns,
+            "down": level.columns,
+            "left": -1,
+            "right": 1
+        }
+
         output = _model(
             variables=[
                 {
@@ -249,13 +232,13 @@ class JaniGenerator(Generator):
                 "type": "real"
             }],
             properties=[self._generate_property(level)],
-            edges=_flatten([self._generate_edges(i, level) for i in sorted(level.reachable_tiles)])
+            edges=_flatten([self._generate_edges(i, level, offsets) for i in sorted(level.reachable_tiles)])
         )
 
         return json.dumps(output, indent=4)
 
     @staticmethod
-    def _generate_board(level) -> list[dict]:
+    def _generate_board(level: Level) -> [Expr]:
         return [{
             "name": f"box_{i}",
             "type": "bool",
@@ -263,22 +246,22 @@ class JaniGenerator(Generator):
         } for i in sorted(level.reachable_tiles)]
 
     @staticmethod
-    def _generate_property(level) -> dict:
-        return _pmax_property("Goal state reached", _and(*[_eq(f"box_{goal}", True) for goal in level.goals]))
+    def _generate_property(level: Level) -> Expr:
+        return _pmax_property("goal_reached", _and(*[_eq(f"box_{goal}", True) for goal in level.goals]))
 
     @staticmethod
-    def _generate_edges(position: int, level: Level) -> list[dict]:
-        def to_push_assignments(y: int, z: int) -> list[dict]:
+    def _generate_edges(position: int, level: Level, offsets: dict[str, int]) -> [Expr]:
+        def to_push_assignments(y: int, z: int) -> [Expr]:
             return [
                 _assignment("position", _if(_and(f"box_{y}", _neg(f"box_{z}")), y, "position")),
                 _assignment(f"box_{y}", _and(f"box_{y}", f"box_{z}")),
                 _assignment(f"box_{z}", _or(f"box_{y}", f"box_{z}"))
             ]
 
-        def to_move_assignment(y: int) -> list[dict]:
+        def to_move_assignment(y: int) -> [Expr]:
             return [_assignment("position", _if(_neg(f"box_{y}"), y, "position"))]
 
-        def to_assignments(direction: str) -> list[list[dict]]:
+        def to_assignments(direction: str) -> [[Expr]]:
             assignments = []
             for current_direction, offset in offsets.items():
                 if current_direction == direction:
@@ -291,25 +274,16 @@ class JaniGenerator(Generator):
                     assignments.append(to_move_assignment(y))
 
             return assignments
-            # probability = _sub(1, "mu") if len(assignments) == 1 else _div(_sub(1, "mu"), len(assignments))
-            # return _destination("move", probability, _flatten(assignments))
 
-        def to_move_command(x: int, y: int) -> tuple[dict, list[dict]]:
+        def to_move_command(x: int, y: int) -> tuple[Expr, [Expr]]:
             return _and(_eq("position", x), _neg(f"box_{y}")), [_assignment("position", y)]
 
-        def to_push_command(x: int, y: int, z: int) -> tuple[dict, list[dict]]:
+        def to_push_command(x: int, y: int, z: int) -> tuple[Expr, [Expr]]:
             return _and(_eq("position", x), _neg(_and(f"box_{y}", f"box_{z}"))), [
                 _assignment("position", y),
                 _assignment(f"box_{y}", False),
                 _assignment(f"box_{z}", _or(f"box_{y}", f"box_{z}"))
             ]
-
-        offsets = {
-            "up": -level.columns,
-            "down": level.columns,
-            "left": -1,
-            "right": 1
-        }
 
         edges = []
         for d, o in offsets.items():
@@ -321,51 +295,14 @@ class JaniGenerator(Generator):
             else:
                 continue
 
-            assignments = to_assignments(d)
-            if len(assignments) == 0:
+            prob_assignments = to_assignments(d)
+            if len(prob_assignments) == 0:
                 destinations.append(_destination("move", 1, assignment))
             else:
                 destinations.append(_destination("move", "mu", assignment))
-                for ass in assignments:
-                    destinations.append(_destination("move", _sub(1, "mu") if len(assignments) == 1 else _div(_sub(1, "mu"), len(assignments)), ass))
+                prob = _sub(1, "mu") if len(prob_assignments) == 1 else _div(_sub(1, "mu"), len(prob_assignments))
+                destinations += [_destination("move", prob, pa) for pa in prob_assignments]
 
-            edges.append({
-                "location": "move",
-                "action": d,
-                "guard": {
-                    "exp": guard
-                },
-                "destinations": destinations
-            })
+            edges.append(_edge(d, guard, destinations))
 
         return edges
-
-        # def to_move(direction: str, x: int, y: int) -> dict:
-        #     return _edge(action=direction,
-        #                  guard=_and(_eq("position", x), _neg(f"box_{y}")),
-        #                  assignments=[_assignment("position", y)])
-        #
-        # def to_move_or_push(direction: str, x: int, y: int, z: int) -> dict:
-        #     return _edge(action=direction,
-        #                  guard=_and(_eq("position", x), _neg(_and(f"box_{y}", f"box_{z}"))),
-        #                  assignments=[
-        #                      _assignment("position", y),
-        #                      _assignment(f"box_{y}", False),
-        #                      _assignment(f"box_{z}", _or(f"box_{y}", f"box_{z}"))
-        #                  ])
-        #
-        # offsets = {
-        #     "up": -level.columns,
-        #     "down": level.columns,
-        #     "left": -1,
-        #     "right": 1
-        # }
-        #
-        # edges = []
-        # for d, o in offsets.items():
-        #     if position + o in level.reachable_tiles and position + 2 * o in level.reachable_tiles:
-        #         edges.append(to_move_or_push(d, position, position + o, position + 2 * o))
-        #     elif position + o in level.reachable_tiles:
-        #         edges.append(to_move(d, position, position + o))
-        #
-        # return edges

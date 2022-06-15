@@ -1,9 +1,7 @@
 import argparse
-import decimal
 import logging
 import os.path
 import sys
-from collections import defaultdict
 
 from generator.jani_generators import JaniNonStochasticGenerator, JaniGenerator
 from generator.prism_generators import PrismGenerator, PrismNonStochasticGenerator
@@ -49,13 +47,6 @@ required.add_argument("-m", "--model",
                       choices=GENERATORS.keys(),
                       required=True,
                       help="model type")
-optional.add_argument("-x", "--probabilities",
-                      type=lambda s: [item for item in s.split(",")],
-                      default="u=0.125,U=0.125,d=0.125,D=0.125,l=0.125,L=0.125,r=0.125,R=0.125,b=0",
-                      help="probabilities of an action happening. "
-                           "Values do not need to add up to 1, they are ..??"
-                           "Available actions are: (u)p, (d)own, (l)eft, (r)ight, (b)ox "
-                           "(default: %(default)s)")
 optional.add_argument("-e", "--precision",
                       type=int,
                       default=28,
@@ -92,31 +83,6 @@ logging.debug(f"Using parser: {type(parser)}")
 generator = GENERATORS[args.model]()
 logging.debug(f"Using generator: {type(generator)}")
 
-# Parse probabilities
-decimal.getcontext().prec = args.precision
-
-probabilities = {}
-for p in args.probabilities:
-    parts = p.strip().split("=")
-    if len(parts) > 2:
-        exit_with_error(f"Invalid probability: '{p}' contains more than 1 value")
-
-    key, value = parts
-    if key.lower() not in {"u", "d", "l", "r", "b"}:
-        exit_with_error(f"Invalid probability: '{p}' has an invalid key")
-
-    if key in probabilities:
-        exit_with_error(f"Probability with key '{key}' defined multiple times")
-
-    try:
-        probabilities[key] = decimal.Decimal(value)
-    except ValueError:
-        exit_with_error(f"Invalid probability: '{p}' has an invalid value")
-
-# Balance probabilities
-probabilities = defaultdict(lambda: 0, {k: v / sum(probabilities.values()) for k, v in probabilities.items()})
-logging.debug(f"Using probabilities: {dict(probabilities)}")
-
 levels = parser.parse_levels(text)
 if len(levels) == 0:
     exit_with_error("No parseable levels found in input")
@@ -130,10 +96,10 @@ if not args.output:
     if args.force:
         logging.warning("Argument --force ignored as no output file is specified")
 
-    print(generator.generate_model(levels[0], probabilities))
+    print(generator.generate_model(levels[0]))
 else:
     for i, level in enumerate(levels):
-        model = generator.generate_model(level, probabilities)
+        model = generator.generate_model(level)
         file_name, extension = os.path.splitext(args.output)
 
         path = f"{file_name}_{i}{extension}"
