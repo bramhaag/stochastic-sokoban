@@ -6,7 +6,7 @@ import sys
 from collections import defaultdict
 
 from generator.jani_generators import JaniBoxGenerator, JaniPosGenerator
-from generator.prism_generators import PrismBoxGenerator, PrismPosGenerator, PrismNonDGenerator, PrismSNonDGenerator
+from generator.prism_generators import PrismGenerator, PrismNonStochasticGenerator
 from parser.parsers import SokParser
 
 PARSERS = {
@@ -16,10 +16,8 @@ PARSERS = {
 GENERATORS = {
     "jani-box": JaniBoxGenerator,
     "jani-pos": JaniPosGenerator,
-    "prism-box": PrismBoxGenerator,
-    "prism-pos": PrismPosGenerator,
-    "prism-nd": PrismNonDGenerator,
-    "prism-snd": PrismSNonDGenerator
+    "prism": PrismGenerator,
+    "prism-ns": PrismNonStochasticGenerator
 }
 
 
