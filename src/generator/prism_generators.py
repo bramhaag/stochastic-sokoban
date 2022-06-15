@@ -30,14 +30,12 @@ def _level_to_string(level) -> str:
 
 class PrismNonStochasticGenerator(Generator):
     def generate_model(self, level: Level, probabilities: dict[str, decimal.Decimal]) -> str:
-        textwrap.dedent(f"""
+        return textwrap.dedent(f"""
         {_indent(_level_to_string(level), 8)}
         mdp
 
         label "goal_reached" = {"&".join(f"box_{g}=true" for g in level.goals)};
         
-        const double mu;
-
         module Player
             position: [{level.first_pos}..{level.last_pos}] init {level.player};
 
