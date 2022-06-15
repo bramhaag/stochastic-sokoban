@@ -1,11 +1,9 @@
-from decimal import Decimal
-
 from generator.generator import Generator
 from parser.level import Level, TileType
 
 
 class SokGenerator(Generator):
-    def generate_model(self, level: Level, probabilities: dict[str, Decimal]) -> str:
+    def generate_model(self, level: Level, probabilities: dict[str, float]) -> str:
         output = ""
         for i in range(level.rows):
             for j in range(level.columns):

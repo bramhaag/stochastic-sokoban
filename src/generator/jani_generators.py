@@ -1,6 +1,5 @@
 import itertools
 import json
-from decimal import Decimal
 
 from generator.generator import Generator, _multi_range, _move_bounds, _flatten
 from parser.level import Level, TileType
@@ -125,10 +124,10 @@ def _model(variables, properties, edges):
     }
 
 
-def _generate_prob_edges(probabilities: dict[str, Decimal]) -> list[dict]:
+def _generate_prob_edges(probabilities: dict[str, float]) -> list[dict]:
     def _move_direction(location: str):
-        return [_destination(f"move_{location}", float(probabilities[location[0]] / 2)),
-                _destination(f"push_{location}", float(probabilities[location[0]] / 2))]
+        return [_destination(f"move_{location}", float(probabilities[location[0]])),
+                _destination(f"push_{location}", float(probabilities[location[0].upper()]))]
 
     return [
         {
@@ -139,7 +138,7 @@ def _generate_prob_edges(probabilities: dict[str, Decimal]) -> list[dict]:
 
 
 class JaniBoxGenerator(Generator):
-    def generate_model(self, level: Level, probabilities: dict[str, Decimal]) -> str:
+    def generate_model(self, level: Level, probabilities: dict[str, float]) -> str:
         output = _model(
             variables=[
                 {
@@ -214,7 +213,7 @@ class JaniBoxGenerator(Generator):
 
 
 class JaniPosGenerator(Generator):
-    def generate_model(self, level: Level, probabilities: dict[str, Decimal]) -> str:
+    def generate_model(self, level: Level, probabilities: dict[str, float]) -> str:
         output = _model(
             variables=[
                 {
