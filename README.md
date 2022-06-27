@@ -72,6 +72,8 @@ optional:
 This script automates the running of benchmarks. Most arguments (engine, property etc.) are not validated, 
 so it is wise to store and check the log using the `-l` argument and verify that the model checker is producing results.
 
+The script can be killed (`^C`) and resumed at a later time by rerunning the benchmark with the same output file.
+
 Dependencies: None
 
 Usage:
@@ -113,4 +115,37 @@ $ python src/run_benchmark.py "generated_models/microban/jani/*.jani" benchmarks
 # Benchmark the Microban set using PRISM's hybrid engine for mu=0.5.
 # Properties are not stored in the model file, so they have to be supplied here.
 $ python src/run_benchmark.py "generated_models/microban/prism/*.prism" benchmarks/prism_hybrid.json -c prism -e hybrid -mu 0.5 -l benchmarks/prism_hybrid.txt -p "Pmax=? [F \"goal_reached\"]"
+```
+
+### run_experiment.py
+Run a PRISM experiment.
+
+The script can be killed (`^C`) and resumed at a later time by rerunning the experiment with the same output file.
+
+Usage:
+```shell
+$ python src/run_experiment.py --help
+usage: run_experiment.py -mu MU -p PROPERTY [-t TIMEOUT] [-m MEMORY] [-l LOG] [--debug] [-h] input output
+
+required:
+  input                 input path. Supports glob patterns to run multiple files
+  output                output result file path
+  -mu MU                values for mu in min:step:max format
+  -p PROPERTY, --property PROPERTY
+                        property to use for experiment
+
+optional:
+  -t TIMEOUT, --timeout TIMEOUT
+                        timeout in seconds (default: 300)
+  -m MEMORY, --memory MEMORY
+                        memory limit (in MB) (default: 6144)
+  -l LOG, --log LOG     output log file path
+  --debug               enable debug logging
+  -h, --help            show this help message and exit
+```
+
+Example usage:
+```shell
+# Calculate Pmax=? [F goal_reached] for all levels with mu=0,0.1,0.2,..,0.9,1
+python src/run_experiment.py "generated_models/microban/prism/*.prism" experiments/prism.json -mu 0:0.1:1 -p "Pmax=? [F \"goal_reached\"]" -l experiments/prism.log
 ```
