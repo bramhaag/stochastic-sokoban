@@ -4,8 +4,9 @@ import os.path
 import sys
 
 from generator.jani_generators import JaniNonStochasticGenerator, JaniGenerator
-from generator.prism_generators import PrismGenerator, PrismNonStochasticGenerator
+from generator.prism_generators import PrismGenerator, PrismNonStochasticGenerator, PrismBGenerator
 from parser.parsers import SokParser
+from util.util import exit_with_error
 
 PARSERS = {
     "sok": SokParser
@@ -15,14 +16,9 @@ GENERATORS = {
     "jani": JaniGenerator,
     "jani-ns": JaniNonStochasticGenerator,
     "prism": PrismGenerator,
+    "prism-b": PrismBGenerator,
     "prism-ns": PrismNonStochasticGenerator
 }
-
-
-def exit_with_error(message: str):
-    logging.error(message)
-    exit(-1)
-
 
 arg_parser = argparse.ArgumentParser(add_help=False)
 
