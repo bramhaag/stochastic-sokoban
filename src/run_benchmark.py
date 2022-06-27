@@ -122,11 +122,11 @@ required.add_argument("-p", "--property",
 optional.add_argument("-t", "--timeout",
                       type=int,
                       default=5 * 60,
-                      help="timeout in seconds (default: %(default)")
+                      help="timeout in seconds (default: %(default)s)")
 optional.add_argument("-m", "--memory",
                       type=int,
                       default=6144,
-                      help="memory limit (in MB) (default: %(default)")
+                      help="memory limit (in MB) (default: %(default)s)")
 
 optional.add_argument("-l", "--log",
                       type=str,
