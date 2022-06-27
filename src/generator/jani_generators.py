@@ -132,7 +132,12 @@ def _model(variables: [Expr] = None, constants: [Expr] = None, properties: [Expr
                 {
                     "automaton": "player"
                 }
-            ]
+            ],
+            # Required for mcsta, but not for Storm..?
+            "syncs": [{
+                "result": d,
+                "synchronise": [d]
+            } for d in ["up", "down", "left", "right"]]
         }
     }
 
@@ -172,7 +177,7 @@ class JaniNonStochasticGenerator(Generator):
             "name": f"box_{i}",
             "type": "bool",
             "initial-value": level.board[i] == TileType.BOX
-        } for i in sorted(level.reachable_tiles)]
+        } for i in sorted(level.reachable_tiles | set(level.goals))]
 
     @staticmethod
     def _generate_property(level: Level) -> Expr:
@@ -243,7 +248,7 @@ class JaniGenerator(Generator):
             "name": f"box_{i}",
             "type": "bool",
             "initial-value": level.board[i] == TileType.BOX
-        } for i in sorted(level.reachable_tiles)]
+        } for i in sorted(level.reachable_tiles | set(level.goals))]
 
     @staticmethod
     def _generate_property(level: Level) -> Expr:
