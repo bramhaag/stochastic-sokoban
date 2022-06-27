@@ -1,4 +1,6 @@
 generated_models/
+test_sets/
+benchmarks/
 
 # Created by https://www.toptal.com/developers/gitignore/api/pycharm,python,tex
 # Edit at https://www.toptal.com/developers/gitignore?templates=pycharm,python,tex

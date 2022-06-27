@@ -18,15 +18,15 @@ class Level(object):
     columns: int
 
     @property
-    def size(self):
+    def size(self) -> int:
         return self.rows * self.columns
 
     @cached_property
-    def first_pos(self):
+    def first_pos(self) -> int:
         return min(self.reachable_tiles)
 
     @cached_property
-    def last_pos(self):
+    def last_pos(self) -> int:
         return max(self.reachable_tiles)
 
     @cached_property
@@ -65,5 +65,5 @@ class Level(object):
     def boxes(self) -> set[int]:
         return {i for i, t in enumerate(self.board) if t == TileType.BOX}
 
-    def is_wall(self, i: int):
+    def is_wall(self, i: int) -> bool:
         return self.board[i] == TileType.WALL

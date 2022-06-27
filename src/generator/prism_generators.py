@@ -102,7 +102,7 @@ class PrismGenerator(Generator):
 
     @staticmethod
     def _generate_board(level: Level) -> str:
-        def to_variable(name: str, value: bool):
+        def to_variable(name: str, value: bool) -> str:
             return f"{name}: bool init {str(value).lower()};"
 
         return '\n'.join(to_variable(f"box_{i}", level.board[i] == TileType.BOX) for i in
@@ -190,7 +190,7 @@ class PrismBGenerator(Generator):
 
     @staticmethod
     def _generate_board(level: Level) -> str:
-        def to_variable(name: str, value: bool):
+        def to_variable(name: str, value: bool) -> str:
             return f"{name}: bool init {str(value).lower()};"
 
         return '\n'.join(to_variable(f"box_{i}", level.board[i] == TileType.BOX) for i in

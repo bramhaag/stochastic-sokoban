@@ -8,7 +8,7 @@ Identifier = str
 Expr = Identifier | dict | Number | bool
 
 
-def _binary_op(op: str, left: Expr, right: Expr):
+def _binary_op(op: str, left: Expr, right: Expr) -> Expr:
     return {
         "op": op,
         "left": left,
