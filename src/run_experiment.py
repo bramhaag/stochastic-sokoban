@@ -120,7 +120,7 @@ for file in experiments:
         result = to_success(file, log)
         logging.info(f"Completed experiment in {t2 - t1}s")
     else:
-        result = to_failure(file, log)
+        result = to_failure(file, "canceled")
         logging.info(f"Canceled: {result['reason']}")
 
     logging.debug(log)
