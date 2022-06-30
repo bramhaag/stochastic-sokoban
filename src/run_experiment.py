@@ -9,6 +9,8 @@ import time
 
 from util.util import exit_with_error, convert_size
 
+PATTERN_SCIFLOAT = r"(\d+(?:.\d+)?(?:[eE]-?\d+)?)"
+
 
 def run_prism(model: str, mu: str, property: str, mem_limit: int, timeout: int) -> (bool, str):
     try:
@@ -27,8 +29,8 @@ def run_prism(model: str, mu: str, property: str, mem_limit: int, timeout: int) 
 
 
 def to_success(file: str, log: str) -> dict:
-    mus = re.findall(r"Model constants: mu=(\d+(?:.\d+)?)", log)[::2]
-    probabilities = re.findall(r"Result: (\d+(?:.\d+)?)", log)
+    mus = re.findall(rf"Model constants: mu={PATTERN_SCIFLOAT}", log)[::2]
+    probabilities = re.findall(rf"Result: {PATTERN_SCIFLOAT}", log)
 
     return {
         "file": file,
