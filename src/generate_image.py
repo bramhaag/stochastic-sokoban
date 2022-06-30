@@ -48,7 +48,7 @@ optional.add_argument("-h", "--help",
 
 args = arg_parser.parse_args()
 
-logging.basicConfig(format="%(levelname)s: %(message)s")
+logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s")
 
 
 def level_to_image(level: Level, draw_indices: bool) -> Image:

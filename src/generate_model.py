@@ -58,9 +58,9 @@ optional.add_argument("-h", "--help",
 args = arg_parser.parse_args()
 
 if args.debug:
-    logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.DEBUG)
+    logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s", level=logging.DEBUG)
 else:
-    logging.basicConfig(format="%(levelname)s: %(message)s")
+    logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s")
 
 # Read input
 if args.input is not None:
