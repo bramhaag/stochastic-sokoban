@@ -1,0 +1,4 @@
+[up]    position=12 & !box_7  -> (position'=7);
+[down]  position=12 & !box_17 -> (position'=17);
+[left]  position=12 & !box_11 -> (position'=11);
+[right] position=12 & !box_13 -> (position'=13);

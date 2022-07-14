@@ -1,0 +1,3 @@
+(position'=box_12 & !box_7 ? 12 : position) 
+ & (box_12'=box_12 & box_7) 
+ & (box_7'=box_12 | box_7)

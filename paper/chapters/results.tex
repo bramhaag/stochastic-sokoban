@@ -1,0 +1,79 @@
+\begin{table*}[ht]
+\begin{tabularx}{\textwidth}{XX|XX|XX|}
+\cline{3-6}
+                                       &             & \multicolumn{2}{l|}{All}                                                   & \multicolumn{2}{l|}{Shared}                                                \\ \hline
+\multicolumn{1}{|l|}{Checker (engine)} & Num. solved & \multicolumn{1}{l|}{Avg. runtime solved (s)} & Avg. peak memory use solved (MB) & \multicolumn{1}{l|}{Avg. runtime solved (s)} & Avg. peak memory use solved (MB) \\ \hline
+\multicolumn{1}{|l|}{PRISM (hybrid)}   & 127         & \multicolumn{1}{l|}{27}                      & 296                         & \multicolumn{1}{l|}{16}                      & 260                         \\ \hline
+\multicolumn{1}{|l|}{Storm (hybrid)}   & 130         & \multicolumn{1}{l|}{35}                      & 2792                        & \multicolumn{1}{l|}{18}                      & 2831                        \\ \hline
+\multicolumn{1}{|l|}{Modest (mcsta)}   & 121         & \multicolumn{1}{l|}{26}                      & 267                         & \multicolumn{1}{l|}{23}                      & 255                         \\ \hline
+\end{tabularx}
+\caption{Result of the benchmarks on the Microban level set for $\mu=0.3$. The \textit{All} column takes all solved levels into account, while the \textit{Shared} column only counts the levels that are solved by all model checkers.}
+\label{tab:benchmark_mu_0.3}
+\end{table*}
+
+\begin{table*}[ht]
+\begin{tabularx}{\textwidth}{XX|XX|XX|}
+\cline{3-6}
+                                       &             & \multicolumn{2}{l|}{All}                                                   & \multicolumn{2}{l|}{Shared}                                                \\ \hline
+\multicolumn{1}{|l|}{Checker (engine)} & Num. solved & \multicolumn{1}{l|}{Avg. runtime solved (s)} & Avg. peak memory use solved (MB) & \multicolumn{1}{l|}{Avg. runtime solved (s)} & Avg. peak memory use solved (MB) \\ \hline
+\multicolumn{1}{|l|}{PRISM (hybrid)}   & 128         & \multicolumn{1}{l|}{15}                      & 299                         & \multicolumn{1}{l|}{13}                      & 278                         \\ \hline
+\multicolumn{1}{|l|}{Storm (hybrid)}   & 138         & \multicolumn{1}{l|}{37}                      & 2811                        & \multicolumn{1}{l|}{26}                      & 2853                        \\ \hline
+\multicolumn{1}{|l|}{Modest (mcsta)}   & 131         & \multicolumn{1}{l|}{22}                      & 518                         & \multicolumn{1}{l|}{22}                      & 524                         \\ \hline
+\end{tabularx}
+\caption{Result of the benchmarks on the Microban level set for $\mu=0.9$. The \textit{All} column takes all solved levels into account, while the \textit{Shared} column only counts the levels that are solved by all model checkers.}
+\label{tab:benchmark_mu_0.9}
+\end{table*}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        title={Pmax=? [F "goal\_reached"]},
+        xlabel = $\mu$,
+        ylabel = Max probability,
+        ytick = {0, 0.25, 0.5, 0.75, 1}
+    ]
+    \addplot table [only marks, x=mu, y=probability, col sep=comma] {data/goal_state_reached.csv};
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Average maximum probability of the goal state being reached based on the value of $\mu$ for the Microban level set (n=92).}
+    \label{fig:chart_goal_reached}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        title={Pmax=? [F<=t "goal\_reached"]},
+        ymode=log,
+        xlabel = $\mu$,
+        ylabel = Max probability,
+        ytick={1, 0.001, 0.000001, 0.000000001, 0.000000000001}
+    ]
+    \addplot table [only marks, x=mu, y=probability, col sep=comma] {data/optimal_solution.csv};
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Average maximum probability of the goal state being reached in $t$ moves based on the value of $\mu$ for the Microban level set, where $t$ is the minimum amount of moves required to solve the level (n=103).}
+    \label{fig:chart_optimal_solution}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        title={Rmin=? [F "goal\_reached"]},
+        xlabel = $\mu$,
+        ylabel style={align=center}, ylabel= Difference from minimum\\number of moves (\%),
+        ytick = {0, 500, 1000, 1500, 2000}
+    ]
+    \addplot table [only marks, x=mu, y=percentual_diff, col sep=comma] {data/expected_moves.csv};
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Average expected number of moves required to solve the level based on the value of $\mu$ for the Microban level set, expressed relative to the number of moves to reach the optimal solution (n=84).}
+    \label{fig:chart_expected_moves}
+\end{figure}
+
+\section{Results}
+
+The results for RQ1 are presented in \autoref{fig:chart_goal_reached}, \autoref{fig:chart_optimal_solution}, and \autoref{fig:chart_expected_moves}. The results for RQ2 can be found in \autoref{tab:benchmark_mu_0.3} and \autoref{tab:benchmark_mu_0.9}. All unsolved models were due to the time constraints imposed on the experiment, as none of the model checkers came close to the memory limit of 8 GB.
+

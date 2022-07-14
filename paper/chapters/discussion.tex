@@ -1,0 +1,20 @@
+\section{Discussion}
+
+\subsection{Analysis of stochastic additions to Sokoban}
+\label{sec:property_analysis}
+The stochastic additions greatly influence the generated solutions by the model checkers. As evident from \autoref{fig:chart_goal_reached}, making mistakes will significantly decrease the probability of being able to complete the level. This is expected, as a single push in the wrong direction will often cause a level to become unsolvable. The probabilities for $\mu<0.2$ have not been calculated due to the high level of iterations required to calculate the probability of solving the level with small $\mu$-values.
+
+\autoref{fig:chart_optimal_solution} shows that the player often cannot recover and find an optimal solution if a mistake was made. However, in very few cases, there are two or more optimal solutions and a mistake will put the player on the path from one optimal solution to another optimal solution. 
+
+As expected, a strong correlation exists between $\mu$ and the expected number of moves to solve a level, as shown in \autoref{fig:chart_expected_moves}. The fewer mistakes the player makes, the fewer moves are required to solve the level. The irregularities in this figure can be attributed to the smaller sample size for this experiment. Increasing the sample size should smoothen out the curve in the plot. The generated models are modified for this specific property, as explained in \autoref{sec:rewards}. This means that in most cases, a mistake is simply corrected by undoing the last move and carrying on with the optimal solution. If conditional properties with rewards were supported, the expected number of moves would likely be higher, as in most cases a wrong push move will need multiple moves to correct. 
+
+\subsection{Benchmarks of PRISM, Storm, and Modest}
+For both $\mu=0.3$ and $\mu=0.9$, Storm using the hybrid engine was able to solve the most Sokoban levels out of the test set within the 5-minute time limit. However, this comes at the cost of runtime performance and memory usage, as it performed the worst in these classes for both the \textit{All} and \textit{Shared} categories.
+
+The most memory-efficient model checker for $\mu=0.3$ is Modest using the mcsta engine in both the \textit{All} and \textit{Shared} categories. For $\mu=0.9$, PRISM is the most memory-efficient in both categories. None of the model checkers exceeded the 8 GB memory limit before the timeout of 5 minutes was reached.
+
+In general, PRISM with the hybrid engine is the fastest model checker. For the \textit{All} category for $\mu=0.3$, Modest was able to beat the average runtime by one second.
+
+This proves that Storm is the most effective probabilistic model checker for this test set according to these measurements, as it was able to solve the greatest amount of models within the time and memory constraints out of the three model checkers. All model checkers were run with their default configuration, meaning there may have been configurations available that would yield more optimal results. This is outside the scope of this research.
+
+As evident by the results analysed in \autoref{sec:property_analysis}, a lower value of $\mu$ reduces the probability of a valid solution being found. This can also be seen by comparing \autoref{tab:benchmark_mu_0.3} and \autoref{tab:benchmark_mu_0.9}: On average, levels were solved quicker for $\mu=0.9$ than for $\mu=0.3$.

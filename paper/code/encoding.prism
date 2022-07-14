@@ -1,0 +1,11 @@
+position: [6..18] init 17;
+
+box_6: bool init false;
+box_7: bool init false;
+box_8: bool init false;
+box_11: bool init false;
+box_12: bool init true;
+box_13: bool init false;
+box_16: bool init false;
+box_17: bool init false;
+box_18: bool init false;

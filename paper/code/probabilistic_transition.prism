@@ -1,0 +1,4 @@
+[up] position=12 & !box_7 -> mu:(position'=7) 
+ + (1-mu)/3:(position'=!box_17 ? 17 : position) 
+ + (1-mu)/3:(position'=!box_11 ? 11 : position) 
+ + (1-mu)/3:(position'=!box_13 ? 13 : position);

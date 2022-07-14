@@ -1,0 +1,6 @@
+\section{Related work}
+There exist many Sokoban solvers, such as Festival\footnote{\url{https://festival-solver.site/}} and Sokolution\footnote{\url{http://codeanalysis.fr/sokoban/}}. The goal of this research however is not to create a solver for (a stochastic version of) Sokoban, but to create a model that a probabilistic model checker will solve.
+
+A project similar to this research has been implemented that generates Sokoban models, which are then used to benchmark three different model checking tools: LTSmin, DiVinE, and nuXmv \cite{comparing_sokoban}. This research solely focused on the standard implementation of Sokoban and therefore benchmarked non-stochastic models with non-probabilistic model checkers. In contrast, this research only considers stochastic models and probabilistic model checking tools.
+
+Similarly, another project focuses on generating models for various logic puzzles, including Sokoban, for LTSmin \cite{ltsmin-puzzles}. This research is different from the mentioned project for the same reasons mentioned above.
